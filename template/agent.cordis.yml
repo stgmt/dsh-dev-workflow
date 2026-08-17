@@ -1,0 +1,43 @@
+# Минимальный пресет-шаблон для нового DSH-плагина.
+# Клонируй папку template/ → переименуй → правь lib/index.js → новая сессия на пресете.
+# Проверка перед использованием: старт сессии (ростер сам покажет, если композиция сломана).
+
+# ── identity ────────────────────────────────────────────────────────────────
+- id: persona
+  name: '@deepseek-ai/dsh-persona'
+  config:
+    text: >-
+      You are a coding agent powered by the {{model}} model. Your working directory is {{cwd}}.
+
+- id: agent-instructions
+  name: '@deepseek-ai/dsh-agent-instructions'
+  config:
+    maxBytes: 65536
+
+# ── shell (платформенно, как в standard) ─────────────────────────────────────
+- id: tool-pwsh
+  name: '@deepseek-ai/dsh-tool-pwsh'
+  disabled: !!js process.platform !== 'win32'
+
+- id: tool-bash
+  name: '@deepseek-ai/dsh-tool-bash'
+  disabled: !!js process.platform === 'win32'
+
+# ── filesystem ──────────────────────────────────────────────────────────────
+- id: tool-fs
+  name: '@deepseek-ai/dsh-tool-fs'
+
+# ── skills (своя папка skills/ пресета) ──────────────────────────────────────
+- id: skill-filesystem
+  name: '@deepseek-ai/dsh-skill-filesystem'
+  config:
+    customSkillDirs:
+      - !!js "process.getBuiltinModule('node:url').fileURLToPath(new URL('skills/', baseUrl))"
+
+- id: tool-skill
+  name: '@deepseek-ai/dsh-tool-skill'
+
+# ── твой плагин ─────────────────────────────────────────────────────────────
+# Файл-плагин: ESM, export default { inject, apply }. Замени id при переименовании.
+- id: my-plugin
+  name: './lib/index.js'
