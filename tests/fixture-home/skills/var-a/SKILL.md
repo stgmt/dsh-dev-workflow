@@ -1,7 +1,6 @@
 ---
 name: dsh-plugin-gotchas
 description: DeepSeek Harness development workflow and gotchas playbook — a six-phase process with checkpoints for creating, modifying, debugging, and repairing dynamic Cordis Plugins, agent presets, and compositions. Load automatically for any DSH development work and follow the phases in order.
-whenToUse: Use whenever creating, modifying, debugging, or repairing anything in DeepSeek Harness: dynamic Cordis plugins (cordis_define/cordis_run/cordis_update/cordis_stop/cordis_inspect), model Tools, Slot UI and tool cards, Client↔Host RPC, shell/subprocess/fs calls from plugin code, approvals and version rollback, agent presets and compositions (copy/edit/validate), and DSH testing. Follow the phases in order; do NOT skip checkpoints and do NOT wait for the user to ask about gotchas.
 ---
 
 # DSH Dev Workflow
@@ -108,14 +107,6 @@ whenToUse: Use whenever creating, modifying, debugging, or repairing anything in
 - YAML композиций — диалект загрузчика: `new yaml.Type('tag:yaml.org,2002:js', { kind: 'scalar', resolve: s => typeof s === 'string', construct: s => ({ __jsExpr: s }) })` + `yaml.JSON_SCHEMA.extend(type)`; без этого `!!js` не парсится.
 - `ctx.dispose` в этой версии отсутствует — teardown толерантный (`typeof ctx.scope?.dispose === 'function'`).
 - Тестируй **поведение** (смоук-вызовы: свободно/занято, пусто/непусто), а не только mount: `tc_check('pwsh')` на agentless-скоупе соврал «СВОБОДНО» — mount-тест этого не видит.
-- Live-зонды из динамического плагина НЕ годятся для скоуп-зависимых реестров: `skills.list()` из agentless-фибера видит пустой слой, а `tools.schemas(exec.agent)` — не тот вид. Проверяй через тест-харнесс (`agentPresets.mount` + `ctx.tools.execute({..., agent})`) или в живой сессии на пресете.
-- Скилы в харнесс-тестах: поднимай `dsh-skill` (реестр, default-экспорт) + `dsh-skill-filesystem` (плагин экспортируется ИМЕНОВАННЫМИ полями `apply`/`inject`/`name`, НЕ default!). Логгер обязателен — ошибки провайдеров реестр глушит в «skipped» без следа. Используй закоммиченную фикстуру со смесью валидных и несовпадающих записей + `watch: false`: на корне с одним-единственным валидным скилом discovery нестабилен (воспроизводилось, корневая причина не найдена).
-
-### Скилы (discovery, dsh-skill-filesystem)
-- **Имя папки скила ОБЯЗАНО совпадать с `name` в шапке SKILL.md** — иначе скил МОЛЧА пропускается (без ошибок и warning'ов; проверено: `var-d` виден, `var-a/b/c` с name≠папке — нет).
-- Шапка: `name` + `description` обязательны; `whenToUse` — опционально; имя — kebab-case `[a-z0-9]+(-[a-z0-9]+)*`.
-- Корни: `<dshHome>/skills` (в нём папка `.system` пропускается), `<agentsHome>/skills`, проектные `<проект>/.dsh/skills` и `<проект>/.agents/skills` (только когда передан cwd), `customSkillDirs`, `bundledSkillDir`.
-- В пресете стандартный ряд `skill-filesystem` НЕ имеет `customSkillDirs` — добавь, чтобы папка `skills/` пресета подхватилась.
 
 ### Дистрибуция (что кому достаётся)
 - Пресет-клон доставляет: host-код (тулы) + скилы. **Никаких карточек/кнопок/UI**: client-модули грузятся только из npm-пакета с полем `dsh.client`, установленного в деплоймент.
