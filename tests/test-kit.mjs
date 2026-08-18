@@ -64,6 +64,16 @@ for (const [label, path] of skillLocations) {
   check(`скил: ${label} имеет шапку name/description/whenToUse`, Boolean(
     fm && fm[1].includes('name: dsh-plugin-gotchas') && fm[1].includes('description:') && fm[1].includes('whenToUse:')
   ))
+  // Регрессия готчи: шапка должна ПАРСИТЬСЯ как YAML (колонка-пробел в plain-скаляре
+  // молча ломает frontmatter, и скил пропадает из каталога без ошибок).
+  let fmOk = false
+  if (fm) {
+    try {
+      const data = yaml.load(fm[1])
+      fmOk = typeof data === 'object' && data !== null && typeof data.name === 'string' && typeof data.description === 'string'
+    } catch { fmOk = false }
+  }
+  check(`скил: ${label} frontmatter парсится как YAML`, fmOk)
   check(`скил: ${label} содержит все 6 фаз`, PHASES.every((p) => body.includes('## ' + p)))
   check(`скил: ${label} содержит справочник готч`, body.includes('## Приложение: справочник готч'))
 }
