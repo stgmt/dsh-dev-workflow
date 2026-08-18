@@ -42,6 +42,8 @@ workflow, проходит по заметкам ДО говнокода**: сн
 |---|---|
 | `skills/dsh-plugin-gotchas/SKILL.md` | **Ядро.** Workflow из 6 фаз с чек-поинтами + справочник готч. Автосрабатывает у агента (`whenToUse`), устанавливается глобально — виден во всех сессиях и пресетах |
 | `template/` | Шаблон-скеффолд: готовая папка-пресет с host/client заготовкой — новый плагин стартует клоном шаблона, а не с пустого листа |
+| `preset-dsh-dev/` | Пресет «всё разом»: скил + тул `tool_collision_check` (проверка имён перед регистрацией) |
+| `tests/test-kit.mjs` | Тест-кит: статика всех копий + живой mount пресетов по апстрим-паттерну |
 | `CHECKLIST.md` | Чек-лист приёмки («definition of done») — что проверить, прежде чем сказать «работает» |
 
 ## Что вы получите (и чего НЕ получите)
@@ -69,12 +71,17 @@ YAML-диалект композиций (с типом `!!js`) и **живой 
 ## Установка (одна команда)
 
 ```bash
-# скил глобально (все сессии, все пресеты):
-git clone https://github.com/stgmt/dsh-dev-workflow ~/.dsh/skills/dsh-plugin-gotchas
-
-# шаблон рядом (для генерации новых плагинов):
 git clone https://github.com/stgmt/dsh-dev-workflow ~/.dsh/dsh-dev-workflow
+
+# скил глобально (все сессии, все пресеты):
+cp -r ~/.dsh/dsh-dev-workflow/skills/dsh-plugin-gotchas ~/.dsh/skills/
+
+# опционально: пресет «всё разом» (скил + тул проверки имён):
+cp -r ~/.dsh/dsh-dev-workflow/preset-dsh-dev ~/.dsh/.agent-presets/dsh-dev
 ```
+
+Windows: вместо `cp -r` — `Copy-Item -Recurse`.
+Обновление: `cd ~/.dsh/dsh-dev-workflow && git pull` и повторить `cp` для того, что устанавливал.
 
 Проверка: новая сессия → скил `dsh-plugin-gotchas` в каталоге → любая задача
 по разработке DSH идёт по фазам.
