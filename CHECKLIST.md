@@ -31,6 +31,12 @@
 - [ ] Сервис-ряды — за isolate-realm
 - [ ] Проверка в НОВОЙ сессии (текущая сессия не видит изменений пресета)
 
+## Hot-reload (живой dsh web)
+
+- [ ] Не предлагать kill/`dsh web` рестарт, пока процесс живой. Сначала insert в watched `profiles/<name>/cordis.patch.yml`
+- [ ] После CLI `dsh plugin add` проверить live: `GET /plugins/<pkg>/client.js` **200** и id в `window.__DSH_BOOT__` — dump-config диска ≠ живой процесс
+- [ ] Один и тот же id не лежит одновременно в `dsh.profile.bundles` и в patch insert (следующий boot → duplicate)
+
 ## Для bundle / «поставил и забыл» (Фаза 6)
 
 - [ ] В пикере режимов **нет** нового пункта. Overlay внутри существующих (`standard` / `code` / `cordis` / user)

@@ -36,6 +36,7 @@ whenToUse: >-
 
 Запрещено:
 - сказать «готово» / «должно работать» / «после рестарта подхватит» без артефакта (команда + вывод);
+- чинить живой dsh web через «убей процесс / перезапусти dsh» — сначала watched `cordis.patch.yml` (см. «HMR vs dsh plugin add»);
 - остановиться на unit-тестах, tsc, или «патч записан»;
 - ждать аппрува на проверку — проверка не спрашивается, она выполняется.
 
@@ -112,7 +113,7 @@ whenToUse: >-
 Официальный tutorial: `docs/user/develop/basic/publish.md` (bundle vs profile, слойность, git `prepare` + `allowBuilds`).
 
 - ✅ Манифест: `dsh.bundle.patch` указывает на YAML-патч. Без этого поля `dsh plugin add` ставит npm-зависимость и **не активирует слой**.
-- ✅ `dsh plugin --profile <name> add <pkg|github:owner/repo#ref>` = pnpm в `$DSH_HOME/profiles/<name>`. Первый add инициализирует профиль.
+- ✅ `dsh plugin --profile <name> add <pkg|github:owner/repo#ref>` = pnpm в `$DSH_HOME/profiles/<name>` и дописывает `dsh.profile.bundles`. Это **не** hot path.
 - ✅ Слойность (позже побеждает): bundle-патчи профиля по списку → `profiles/<name>/cordis.patch.yml` → `$DSH_HOME/cordis.patch.yml` → `--patch`. Патч **заменяет весь `config` ряда**, не мержит ключи.
 - ✅ Патч **не переименовывает** ряд. Если `id` нашёлся, а `name` не совпал — loader пишет `name mismatch ... skipping` и идёт дальше. Нельзя написать `name: my-pkg` на чужой id. Для host-ряда: `disabled: true` на stock + `insert` нового. Для isolate-синглтона: overlay `name:` внутри группы, не второй провайдер на host. YAML-rewrite ест CRLF и оба стиля кавычек; после записи — grep файла.
 - ✅ Изолированный синглтон (пример: `ctx.compaction` в группе пресета с `isolate: { compaction: true }`) живёт **в пресете сессии**, не в host dump. Замена = смена `name` **внутри этой группы**. Host-insert второго провайдера того же сервиса — ошибка плоскости.
@@ -192,6 +193,28 @@ whenToUse: >-
 ### Дистрибуция (что кому достаётся)
 - Пресет-клон доставляет: host-код (тулы) + скилы. **Никаких карточек/кнопок/UI**: client-модули грузятся только из npm-пакета с полем `dsh.client`, установленного в деплоймент.
 - Юзерам через пресеты карточки ставить НЕЛЬЗЯ — они просто не доедут. Продукту нужен UI? Это отдельный дистрибутив (npm-публикация или git-установка в деплоймент), не пресет.
+
+### HMR vs `dsh plugin add` (не говорить «рестартни dsh»)
+Запрещено отвечать «перезапусти dsh» как основным фиксом, пока живой процесс крутится. Харнес заточен на hot-reload.
+
+Что **горячее** (без kill процесса):
+- `$DSH_HOME/profiles/<name>/cordis.patch.yml` и `$DSH_HOME/cordis.patch.yml` — `watchUserPatches` пересобирает слой ~за секунду;
+- скилы в живых корнях;
+- disable/enable уже смонтированного ряда через `disabled:` в watched patch;
+- плагины, которые **уже запущенный** рынок (dshmarket) ставит сам: hot-mount + refresh вкладки.
+
+Что **не** горячее:
+- новый id в `dsh.profile.bundles` (`package.json`) — `composeLive()` держит bundle-слои **со старта**. CLI-add пакета, которого не было в boot-снимке, в живой UI не появится;
+- client-modules кэш «это не client-пакет» на имя — до смерти процесса.
+
+Живой путь для нового bundle, пока dsh web уже запущен:
+1. пакет в `dependencies` профиля (pnpm/`dsh plugin add`);
+2. `insert` того же `id`/`name` в **watched** `cordis.patch.yml`, не второй раз в bundles;
+3. подождать HMR (~1s), потом **refresh вкладки** (client bundle `/plugins/<pkg>/client.js`). Kill процесса не нужен.
+
+Нельзя оставить один и тот же insert **и** в `dsh.profile.bundles`, **и** в patch.yml: следующий boot → `duplicate loader entry id`. Либо bundles (следующий boot), либо patch (live+boot). Для live-активации после CLI-add: insert в patch, выкинуть имя из `bundles`.
+
+Рестарт процесса — запасной выход, когда patch содержит не plain insert (config/!!js), host не импортирует include, или client-modules уже закэшировал negative. Не открывать им ответ.
 
 ### Цифры и проверки
 - Сверяй результат независимым инструментом; живой репозиторий меняется — только одновременные замеры.
