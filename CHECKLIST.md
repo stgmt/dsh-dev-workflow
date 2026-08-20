@@ -27,6 +27,14 @@
 ## Для пресетов (Фаза 5)
 
 - [ ] `standingKeyFor(id)` — монтируется: OK
-- [ ] `customSkillDirs` на месте, если в пресете есть скилы
+- [ ] `customSkillDirs` на месте, если в пресете есть **свои** скилы. Канон `dsh-plugin-gotchas` не копировать сюда — nearest layer затенит `~/.dsh/skills`
 - [ ] Сервис-ряды — за isolate-realm
 - [ ] Проверка в НОВОЙ сессии (текущая сессия не видит изменений пресета)
+
+## Для bundle / «поставил и забыл» (Фаза 6)
+
+- [ ] В пикере режимов **нет** нового пункта. Overlay внутри существующих (`standard` / `code` / `cordis` / user)
+- [ ] `dsh --profile <live> --dump-config`: host-ряд overlay на месте; isolate-синглтон на host **не** вставлен вторым провайдером
+- [ ] Live `agent.cordis.yml` выбранного режима (обычно shipped `standard`) содержит наш `name:`, не stock
+- [ ] Будущий `copy('standard', id)` и апгрейд DSH снова получают overlay без ручного шага пользователя
+- [ ] Юзер ничего не выбирает после `dsh plugin add`

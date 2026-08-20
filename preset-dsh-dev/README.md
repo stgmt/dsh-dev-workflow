@@ -11,7 +11,7 @@ cp -r preset-dsh-dev ~/.dsh/.agent-presets/dsh-dev
 
 ## Что внутри
 
-- `skills/dsh-plugin-gotchas/SKILL.md` — workflow из шести фаз (канон: `skills/` в корне репо и `~/.dsh/skills/`);
+- `skills/dsh-plugin-gotchas/SKILL.md` — копия канона из `skills/` (тест-кит требует байт-в-байт). На машине ставь junction на `~/.dsh/skills/dsh-plugin-gotchas`, иначе nearest layer затенит глобальный канон;
 - `lib/index.js` — тул `tool_collision_check`: проверка имени перед регистрацией тула;
 - минимальная композиция: persona, pwsh/bash, fs, skills.
 

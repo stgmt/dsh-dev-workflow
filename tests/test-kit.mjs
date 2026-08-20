@@ -45,7 +45,7 @@ const skillLocations = [
   ['installed dsh-dev', join(dshHome, '.agent-presets', 'dsh-dev', 'skills', 'dsh-plugin-gotchas', 'SKILL.md')],
   ['installed reels-dsh', join(dshHome, '.agent-presets', 'reels-dsh', 'skills', 'dsh-plugin-gotchas', 'SKILL.md')],
 ]
-const PHASES = ['Фаза 0', 'Фаза 1', 'Фаза 2', 'Фаза 3', 'Фаза 4', 'Фаза 5']
+const PHASES = ['Фаза 0', 'Фаза 1', 'Фаза 2', 'Фаза 3', 'Фаза 4', 'Фаза 5', 'Фаза 6']
 
 async function fileExists(path) {
   try { await access(path); return true } catch { return false }
@@ -74,7 +74,7 @@ for (const [label, path] of skillLocations) {
     } catch { fmOk = false }
   }
   check(`скил: ${label} frontmatter парсится как YAML`, fmOk)
-  check(`скил: ${label} содержит все 6 фаз`, PHASES.every((p) => body.includes('## ' + p)))
+  check(`скил: ${label} содержит все фазы 0–6`, PHASES.every((p) => body.includes('## ' + p)))
   check(`скил: ${label} содержит справочник готч`, body.includes('## Приложение: справочник готч'))
 }
 
