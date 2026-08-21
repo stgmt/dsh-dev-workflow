@@ -72,7 +72,9 @@ for (const [label, path] of skillLocations) {
   const body = await readFile(path, 'utf8')
   skillBodies.set(label, body)
   check(`скил: ${label} существует`, true, path)
-  const fm = body.match(/^---\n([\s\S]*?)\n---/)
+  // \r? — после git-операций (autocrlf) рабочая копия может быть CRLF;
+  // DSH-парсер шапки \r стрипает, тест обязан допускать оба варианта.
+  const fm = body.match(/^---\r?\n([\s\S]*?)\r?\n---/)
   check(`скил: ${label} имеет шапку name/description/whenToUse`, Boolean(
     fm && fm[1].includes('name: dsh-plugin-gotchas') && fm[1].includes('description:') && fm[1].includes('whenToUse:')
   ))
