@@ -17,10 +17,13 @@ whenToUse: >-
   Client-Host RPC, shell/subprocess/fs from plugin code, approvals, agent
   presets and compositions, replacing a shipped plugin row, compaction
   engines, global install across profiles/presets, overlaying a shipped
-  row without a new picker mode. Follow the phases in order. Do NOT skip
+  row without a new picker mode, skill discovery and hot-reload
+  (customSkillDirs, SKILL.md frontmatter), tool name collisions,
+  distribution to users. Follow the phases in order. Do NOT skip
   checkpoints. Do NOT wait for the user to ask about gotchas, proof,
   dump-config, UI, or standard. Do NOT add a new agent-mode picker row
-  when the user wants install-and-forget.
+  when the user wants install-and-forget. Run the Phase 7 retro check
+  before declaring any task done.
 ---
 
 # DSH Dev Workflow
@@ -63,6 +66,7 @@ whenToUse: >-
 - ✅ Дерево слотов (`Slots.listSubTree`): протокол (single/list/keyed/chain), занятые ключи, replaceRisk, ownerProps.
 - ✅ Для пресетов: прочитать композицию целиком; если в контракте пустой `referencedTypes` — `.d.ts` установленных пакетов как второй источник правды.
 - ✅ Для bundle/замены ряда: найти **все** живые `agent.cordis.yml` и host-слои, где стоит stock `name`. Не grep только репозиторий плагина.
+- ✅ **Анти-костыль:** прежде строить СВОЙ механизм (скрипты синка, обёртки, ручные копии, велосипедные реестры) — найди ШТАТНЫЙ: апстрим-туториал (`docs/user/develop/…`), inspect-контракты, CLI (`dsh plugin`, `--dump-config`). Самодельное — только после доказательства «штатного нет». Костыль, построенный за час, потом сносится день.
 
 ## Фаза 2 — Код
 
@@ -126,6 +130,15 @@ whenToUse: >-
   6. leftover-пресет в пикере с нашим fingerprint — снести, это баг доставки.
 - ✅ pnpm ≥10 режет lifecycle git-зависимости без `allowBuilds`. Пакет «стоит» ≠ overlay на месте. Доказательство: live `agent.cordis.yml` выбранного режима + dump-config host-ряда overlay.
 - ✅ Не патчь случайный checkout `~/deepseek-harness`, если цель — установленный dsh. Корни: roster `agentPresets.list()`, npm global, `profiles/node_modules/@deepseek-ai/dsh`, `$DSH_HOME/.agent-presets`.
+
+## Фаза 7 — Рефлексия и самоулучшение (перед «готово»)
+
+Задача не закрыта, пока не улучшен workflow:
+
+- ✅ Ретро-чек: какой ШТАТНЫЙ механизм я мог использовать вместо самодельного? Что из сделанного станет граблёй завтра? Что проверял НЕ тем инструментом?
+- ✅ Инцидент, костыль или пинок пользователя → готча в канон В ТОМ ЖЕ ХОДЕ, формат «готча → фаза → чек-поинт → как воспроизвести». Незаписанная грабля = часы следующего агента.
+- ✅ Вызови `dsh_retro` (из бандла): соберёт чек-лист и свежесть канона за тебя. Дешёвый вызов = выполнимая привычка.
+- ✅ Финальный вопрос: «обновил скил? следующий агент знает как/когда/зачем это юзать?» Если нет — срез не закончен.
 
 ---
 

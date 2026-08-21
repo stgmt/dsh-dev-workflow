@@ -57,7 +57,7 @@ const skillLocations = [
   ['installed dsh-dev', join(dshHome, '.agent-presets', 'dsh-dev', 'skills', 'dsh-plugin-gotchas', 'SKILL.md')],
   ['installed reels-dsh', join(dshHome, '.agent-presets', 'reels-dsh', 'skills', 'dsh-plugin-gotchas', 'SKILL.md')],
 ]
-const PHASES = ['Фаза 0', 'Фаза 1', 'Фаза 2', 'Фаза 3', 'Фаза 4', 'Фаза 5', 'Фаза 6']
+const PHASES = ['Фаза 0', 'Фаза 1', 'Фаза 2', 'Фаза 3', 'Фаза 4', 'Фаза 5', 'Фаза 6', 'Фаза 7']
 
 async function fileExists(path) {
   try { await access(path); return true } catch { return false }
@@ -263,8 +263,12 @@ try {
     const ctxB = new ContextB()
     await ctxB.plugin({ name: 'logger', apply(c) { c.provide('logger', { info() {}, warn() {}, error() {}, debug() {}, success() {} }) } })
     await ctxB.plugin(SkillServiceB)
+    // Фейковый tools-сервис: ловим регистрации бандла без полного ToolRuntime.
+    const registered = []
+    await ctxB.plugin({ name: 'fake-tools', apply(c) { c.provide('tools', { register(t) { registered.push(t.name) }, schemas: () => [] }) } })
     const bundlePlugin = (await import(pathToFileURL(join(repoRoot, 'lib', 'index.js')))).default
     await ctxB.plugin(bundlePlugin)
+    check('бандл: тулы зарегистрированы (collision + retro)', registered.includes('tool_collision_check') && registered.includes('dsh_retro'), registered.join(',') || '(пусто)')
     let bundleNames = []
     for (let attempt = 0; attempt < 3 && !bundleNames.includes('dsh-plugin-gotchas'); attempt++) {
       if (attempt > 0) await new Promise((r) => setTimeout(r, 150))
