@@ -266,12 +266,18 @@ try {
     // Фейковый tools-сервис: ловим РЕГИСТРАЦИИ бандла (объекты тулов) без полного ToolRuntime.
     const registered = []
     await ctxB.plugin({ name: 'fake-tools', apply(c) { c.provide('tools', { register(t) { registered.push(t) }, schemas: () => [] }) } })
+    // Фейковый systemPrompt: ловим секцию Фазы 7 (Шаг 5).
+    const sections = []
+    await ctxB.plugin({ name: 'fake-system-prompt', apply(c) { c.provide('systemPrompt', { section(s) { sections.push(s); return () => {} } }) } })
     const bundlePlugin = (await import(pathToFileURL(join(repoRoot, 'lib', 'index.js')))).default
     await ctxB.plugin(bundlePlugin)
     check('бандл: тулы зарегистрированы (collision + retro)', registered.some((t) => t.name === 'tool_collision_check') && registered.some((t) => t.name === 'dsh_retro'), registered.map((t) => t.name).join(',') || '(пусто)')
     const retroTool = registered.find((t) => t.name === 'dsh_retro')
     const retroOut = retroTool ? await retroTool.execute({}, {}) : '(нет тула)'
     check('бандл: dsh_retro отвечает чек-листом', retroOut.includes('RETRO-ЧЕК'), String(retroOut).split('\n')[0])
+    check('бандл: секция Фазы 7 в system prompt (Шаг 5)', sections.some((s) => s.name === 'dsh-dev:phase7' && String(s.text).includes('dsh_retro')), sections.map((s) => s.name).join(',') || '(пусто)')
+    const patternsOut = retroTool ? await retroTool.execute({ patterns: true }, {}) : '(нет тула)'
+    check('бандл: dsh_retro patterns — агрегат журнала (Шаг 4)', patternsOut.includes('RETRO-ПАТТЕРНЫ'), String(patternsOut).split('\n')[0])
     let bundleNames = []
     for (let attempt = 0; attempt < 3 && !bundleNames.includes('dsh-plugin-gotchas'); attempt++) {
       if (attempt > 0) await new Promise((r) => setTimeout(r, 150))
