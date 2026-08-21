@@ -26,6 +26,18 @@ function check(name, ok, detail = '') {
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? ' — ' + detail : ''}`)
 }
 
+// ── 0. Синк канона скила во все копии ───────────────────────────────────────
+// Канон один — <repo>/skills/dsh-plugin-gotchas/SKILL.md; остальные копии
+// производные и руками не правятся. Тест-кит синкает САМ перед проверками:
+// запуск тестов = всегда консистентный мир, «забыл синкнуть» невозможно.
+import { syncSkills } from '../scripts/sync-skills.mjs'
+try {
+  await syncSkills({ repoRoot, dshHome, log: () => {} })
+  check('синк: канон скила разлит по всем 5 копиям', true)
+} catch (error) {
+  check('синк: канон скила разлит по всем 5 копиям', false, String(error?.message ?? error))
+}
+
 const requireDsh = createRequire(resolve(NM, '@deepseek-ai/dsh/package.json'))
 const yaml = requireDsh('js-yaml')
 // Тот же YAML-диалект, что у загрузчика (cordis-plugin-include): `!!js`-скаляры
