@@ -1,3 +1,5 @@
 node_modules/
 .DS_Store
 *.log
+.dsh-dev-retro.jsonl
+tests/_last-run.txt

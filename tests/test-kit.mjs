@@ -263,12 +263,15 @@ try {
     const ctxB = new ContextB()
     await ctxB.plugin({ name: 'logger', apply(c) { c.provide('logger', { info() {}, warn() {}, error() {}, debug() {}, success() {} }) } })
     await ctxB.plugin(SkillServiceB)
-    // Фейковый tools-сервис: ловим регистрации бандла без полного ToolRuntime.
+    // Фейковый tools-сервис: ловим РЕГИСТРАЦИИ бандла (объекты тулов) без полного ToolRuntime.
     const registered = []
-    await ctxB.plugin({ name: 'fake-tools', apply(c) { c.provide('tools', { register(t) { registered.push(t.name) }, schemas: () => [] }) } })
+    await ctxB.plugin({ name: 'fake-tools', apply(c) { c.provide('tools', { register(t) { registered.push(t) }, schemas: () => [] }) } })
     const bundlePlugin = (await import(pathToFileURL(join(repoRoot, 'lib', 'index.js')))).default
     await ctxB.plugin(bundlePlugin)
-    check('бандл: тулы зарегистрированы (collision + retro)', registered.includes('tool_collision_check') && registered.includes('dsh_retro'), registered.join(',') || '(пусто)')
+    check('бандл: тулы зарегистрированы (collision + retro)', registered.some((t) => t.name === 'tool_collision_check') && registered.some((t) => t.name === 'dsh_retro'), registered.map((t) => t.name).join(',') || '(пусто)')
+    const retroTool = registered.find((t) => t.name === 'dsh_retro')
+    const retroOut = retroTool ? await retroTool.execute({}, {}) : '(нет тула)'
+    check('бандл: dsh_retro отвечает чек-листом', retroOut.includes('RETRO-ЧЕК'), String(retroOut).split('\n')[0])
     let bundleNames = []
     for (let attempt = 0; attempt < 3 && !bundleNames.includes('dsh-plugin-gotchas'); attempt++) {
       if (attempt > 0) await new Promise((r) => setTimeout(r, 150))
