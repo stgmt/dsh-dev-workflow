@@ -253,6 +253,30 @@ try {
   check('скилы: правило папка=name — валидные test-mini и var-d видны', skillNames.includes('test-mini') && skillNames.includes('var-d'), skillNames.join(',') || '(пусто)')
   check('скилы: правило папка=name — несовпадающие var-a/var-b/var-c молча пропущены', !skillNames.includes('var-a') && !skillNames.includes('var-b') && !skillNames.includes('var-c'), skillNames.join(',') || '(пусто)')
 
+  // E. Бандл-вход (lib/index.js): скил доставляется ИЗ ПАКЕТА без копий —
+  // провайдер регистрируется на <пакет>/skills/ через import.meta.url.
+  // Свои импорты: Context локален внутри bootHarness.
+  try {
+    const impB = (pkg) => import(pathToFileURL(join(NM, pkg, 'lib', 'index.js')).href)
+    const { Context: ContextB } = await impB('@deepseek-ai/cordis')
+    const { default: SkillServiceB } = await impB('@deepseek-ai/dsh-skill')
+    const ctxB = new ContextB()
+    await ctxB.plugin({ name: 'logger', apply(c) { c.provide('logger', { info() {}, warn() {}, error() {}, debug() {}, success() {} }) } })
+    await ctxB.plugin(SkillServiceB)
+    const bundlePlugin = (await import(pathToFileURL(join(repoRoot, 'lib', 'index.js')))).default
+    await ctxB.plugin(bundlePlugin)
+    let bundleNames = []
+    for (let attempt = 0; attempt < 3 && !bundleNames.includes('dsh-plugin-gotchas'); attempt++) {
+      if (attempt > 0) await new Promise((r) => setTimeout(r, 150))
+      bundleNames = (await ctxB.skills.list()).map((s) => s.name).sort()
+    }
+    check('бандл: скил доставлен из пакета без копий', bundleNames.includes('dsh-plugin-gotchas'), bundleNames.join(',') || '(пусто)')
+    if (typeof ctxB.dispose === 'function') await ctxB.dispose()
+    else if (typeof ctxB.scope?.dispose === 'function') await ctxB.scope.dispose()
+  } catch (error) {
+    check('бандл: скил доставлен из пакета без копий', false, String(error?.stack ?? error?.message ?? error).split('\n').slice(0, 4).join(' | '))
+  }
+
   await rm(fixtures, { recursive: true, force: true })
   if (typeof ctx.dispose === 'function') await ctx.dispose()
   else if (typeof ctx.scope?.dispose === 'function') await ctx.scope.dispose()

@@ -1,0 +1,6 @@
+# Слой бандла dsh-dev-workflow.
+# Ряды ссылаются на пакет ПО ИМЕНИ — Node-resolution найдёт установленный код
+# (в отличие от пресетных рядов с относительным './lib/index.js').
+- insert:
+    - id: dsh-dev-tools
+      name: dsh-dev-workflow
